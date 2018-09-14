@@ -15,6 +15,7 @@ import org.springframework.web.client.RestTemplate;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -50,6 +51,12 @@ public class WebpurifyService {
     @Value("${webpurify.blackword.add}")
     private String blackwordAddUri;
 
+    @Value("${webpurify.whiteword.add}")
+    private String whitewordAddUri;
+
+    @Value("${webpurify.whiteword.remove}")
+    private String whitewordRemoveUri;
+
     public Optional<List<String>> getBlackwordList() {
         JsonNode jsonResult = apiCall(blackwordListUri, "");
         try {
@@ -64,20 +71,29 @@ public class WebpurifyService {
     }
 
     public boolean addBlackword(String word) {
-        if(processBlackword(blackwordAddUri, word))
+        if (processBlackword(blackwordAddUri, whitewordRemoveUri, word))
             return blackWordService.addBlackword(word);
         return false;
     }
 
     public boolean removeBlackword(String word) {
-        if(processBlackword(blackwordRemoveUri, word))
+        if (processBlackword(blackwordRemoveUri, whitewordAddUri, word))
             return blackWordService.removeBlackword(word);
         return false;
     }
 
-    private boolean processBlackword(String uri, String word) {
+    public boolean removeBlackwordList(String word) {
+        Arrays.stream(word.split(",")).forEach(w -> {
+            if (processBlackword(blackwordRemoveUri, whitewordAddUri, w))
+                blackWordService.removeBlackword(w);
+        });
+        return true;
+    }
+
+    private boolean processBlackword(String uri, String oppositeUri,  String word) {
         try {
-            JsonNode jsonResult = jsonResult = apiCall(uri, "word=" + URLEncoder.encode(word, "utf-8"));
+            apiCall(oppositeUri, "word=" + URLEncoder.encode(word, "utf-8"));
+            JsonNode jsonResult = apiCall(uri, "word=" + URLEncoder.encode(word, "utf-8"));
             if (jsonResult.get("rsp").get("@attributes").get("stat").asText().equals("ok")) {
                 return true;
             } else {
@@ -100,9 +116,9 @@ public class WebpurifyService {
     }
 
     public MessageVO blackWordFilterProcess(MessageVO messageVO) {
-        JsonNode jsonResult = apiCall(checkReturnUri, "text=" + messageVO.getMessage());
-        if (jsonResult.get("rsp").get("expletive") != null) {
-            try {
+        try {
+            JsonNode jsonResult = apiCall(checkReturnUri, "text=" + URLEncoder.encode(messageVO.getMessage(), "utf-8"));
+            if (jsonResult.get("rsp").get("expletive") != null) {
                 List<String> blackwordReturnList = objectListStringReader.readValue(jsonResult.get("rsp")
                         .get("expletive"));
                 Optional<List<String>> blackListOptional = Optional.ofNullable(blackwordReturnList.stream().distinct().collect(Collectors.toList()));
@@ -113,11 +129,11 @@ public class WebpurifyService {
                         blackWordService.sendAddBlackword(messageVO, b);
                     });
                 });
-            } catch (IOException e) {
-                e.printStackTrace();
             }
-
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+
 
         return messageVO;
     }

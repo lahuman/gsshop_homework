@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <title>Blackword Manage</title>
+    <link rel="stylesheet" href="/css/blackword.css" />
+</head>
+<body>
+<noscript>
+    <h2>Sorry! Your browser doesn't support Javascript</h2>
+</noscript>
+
+<div id="chat-page" >
+    <div class="chat-container">
+        <div class="chat-header">
+            <h2>Blackword Manage</h2>
+        </div>
+        <form id="blackwordForm" name="blackwordForm" nameForm="blackwordForm">
+            <div class="form-group">
+                <div class="input-group clearfix">
+                    <input type="text" id="word" placeholder="Type a word..." autocomplete="off" class="form-control" />
+                    <button type="submit" class="primary">Add</button>
+                </div>
+            </div>
+        </form>
+        <div class="connecting">
+            Connecting...
+        </div>
+        <ul id="wordArea">
+
+        </ul>
+        <form id="listForm" name="listForm" nameForm="listForm">
+            <div class="form-group">
+                <div class="input-group clearfix">
+                    <button type="button" class="remover" id="removeBtn">Remove</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.1.4/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+<script src="/js/blackword.js"></script>
+</body>
+</html>
